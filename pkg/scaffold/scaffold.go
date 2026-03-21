@@ -13,6 +13,7 @@ package scaffold
 import (
 	"image"
 	"image/color"
+	"time"
 
 	"gioui.org/font"
 	"gioui.org/font/gofont"
@@ -346,6 +347,7 @@ func (s *Sidebar) layoutItem(gtx layout.Context, item *SidebarItem) layout.Dimen
 type Modal struct {
 	Visible  bool
 	MaxWidth unit.Dp
+	backdrop widget.Clickable
 	th       *theme.Theme
 }
 
@@ -364,13 +366,18 @@ func (m *Modal) Layout(gtx layout.Context, content layout.Widget) layout.Dimensi
 	th := m.th
 
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-		// Backdrop
+		// Backdrop — click to close
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			sz := gtx.Constraints.Max
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 128},
-				clip.Rect{Max: sz}.Op(),
-			)
-			return layout.Dimensions{Size: sz}
+			return m.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				if m.backdrop.Clicked(gtx) {
+					m.Visible = false
+				}
+				paint.FillShape(gtx.Ops, color.NRGBA{A: 128},
+					clip.Rect{Max: sz}.Op(),
+				)
+				return layout.Dimensions{Size: sz}
+			})
 		}),
 		// Dialog
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
@@ -578,6 +585,8 @@ type Toast struct {
 	Variant  int // reuse AlertVariant
 	Position ToastPosition
 	Visible  bool
+	Duration time.Duration // auto-dismiss duration; 0 defaults to 3s
+	showAt   time.Time
 	th       *theme.Theme
 }
 
@@ -588,12 +597,23 @@ func NewToast(th *theme.Theme) *Toast {
 func (t *Toast) Show(text string) {
 	t.Text = text
 	t.Visible = true
+	t.showAt = time.Now()
 }
 
 func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 	if !t.Visible || t.Text == "" {
 		return layout.Dimensions{}
 	}
+	dur := t.Duration
+	if dur == 0 {
+		dur = 3 * time.Second
+	}
+	deadline := t.showAt.Add(dur)
+	if gtx.Now.After(deadline) {
+		t.Visible = false
+		return layout.Dimensions{}
+	}
+	gtx.Execute(op.InvalidateCmd{At: deadline})
 	th := t.th
 	radius := gtx.Dp(th.RoundedLg)
 

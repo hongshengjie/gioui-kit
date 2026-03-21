@@ -168,41 +168,40 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	return b.Clickable.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return b.padding().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-					sz := gtx.Constraints.Min
-					rrect := clip.UniformRRect(image.Rectangle{Max: sz}, radius)
-					defer rrect.Push(gtx.Ops).Pop()
+		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+				sz := gtx.Constraints.Min
+				defer clip.UniformRRect(image.Rectangle{Max: sz}, radius).Push(gtx.Ops).Pop()
 
-					// Background fill
-					if bg.A > 0 {
-						paint.ColorOp{Color: bg}.Add(gtx.Ops)
-						paint.PaintOp{}.Add(gtx.Ops)
-					}
+				// Background fill
+				if bg.A > 0 {
+					paint.ColorOp{Color: bg}.Add(gtx.Ops)
+					paint.PaintOp{}.Add(gtx.Ops)
+				}
 
-					// Outline variant border
-					if b.Variant == BtnOutline {
-						paint.FillShape(gtx.Ops, th.BaseContent,
-							clip.Stroke{
-								Path:  clip.UniformRRect(image.Rectangle{Max: sz}, radius).Path(gtx.Ops),
-								Width: float32(gtx.Dp(1)),
-							}.Op(),
-						)
-					}
+				// Outline variant border
+				if b.Variant == BtnOutline && sz.X > 0 && sz.Y > 0 {
+					paint.FillShape(gtx.Ops, th.BaseContent,
+						clip.Stroke{
+							Path:  clip.UniformRRect(image.Rectangle{Max: sz}, radius).Path(gtx.Ops),
+							Width: float32(gtx.Dp(1)),
+						}.Op(),
+					)
+				}
 
-					// Cursor
-					pointer.CursorPointer.Add(gtx.Ops)
-					return layout.Dimensions{Size: sz}
-				}),
-				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				// Cursor
+				pointer.CursorPointer.Add(gtx.Ops)
+				return layout.Dimensions{Size: sz}
+			}),
+			layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				return b.padding().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					if b.Loading {
 						return drawSpinner(gtx, fg, b.fontSize())
 					}
 					return drawText(gtx, th, b.Text, fg, b.fontSize(), font.SemiBold)
-				}),
-			)
-		})
+				})
+			}),
+		)
 	})
 }
 
@@ -267,24 +266,24 @@ func (b *Badge) colors() (bg, fg color.NRGBA) {
 
 func (b *Badge) Layout(gtx layout.Context) layout.Dimensions {
 	bg, fg := b.colors()
-	padding := layout.Inset{Top: 2, Bottom: 2, Left: 8, Right: 8}
-	radius := gtx.Dp(b.th.RoundedFull)
 
-	return padding.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-				sz := gtx.Constraints.Min
-				rrect := clip.UniformRRect(image.Rectangle{Max: sz}, radius)
-				defer rrect.Push(gtx.Ops).Pop()
-				paint.ColorOp{Color: bg}.Add(gtx.Ops)
-				paint.PaintOp{}.Add(gtx.Ops)
-				return layout.Dimensions{Size: sz}
-			}),
-			layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+	// Padding is inside Stacked so Expanded.Min reflects the full pill size.
+	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			sz := gtx.Constraints.Min
+			// Cap radius to half the shortest side to avoid degenerate Bezier curves.
+			radius := min(sz.X, sz.Y) / 2
+			defer clip.UniformRRect(image.Rectangle{Max: sz}, radius).Push(gtx.Ops).Pop()
+			paint.ColorOp{Color: bg}.Add(gtx.Ops)
+			paint.PaintOp{}.Add(gtx.Ops)
+			return layout.Dimensions{Size: sz}
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Top: 2, Bottom: 2, Left: 8, Right: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return drawText(gtx, b.th, b.Text, fg, b.th.XsSize, font.SemiBold)
-			}),
-		)
-	})
+			})
+		}),
+	)
 }
 
 // ============================================================
@@ -323,21 +322,29 @@ func (c *Card) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			sz := gtx.Constraints.Min
-			rrect := clip.UniformRRect(image.Rectangle{Max: sz}, radius)
-			defer rrect.Push(gtx.Ops).Pop()
+			outerStack := clip.UniformRRect(image.Rectangle{Max: sz}, radius).Push(gtx.Ops)
+			defer outerStack.Pop()
 
-			// Background
-			paint.ColorOp{Color: th.Base100}.Add(gtx.Ops)
-			paint.PaintOp{}.Add(gtx.Ops)
-
-			// Border
 			if c.Bordered {
-				paint.FillShape(gtx.Ops, th.Base300,
-					clip.Stroke{
-						Path:  clip.UniformRRect(image.Rectangle{Max: sz}, radius).Path(gtx.Ops),
-						Width: float32(gtx.Dp(1)),
-					}.Op(),
-				)
+				// Paint-over border: fill outer with border color, then overpaint center with background.
+				// Avoids clip.Stroke which can loop infinitely on zero-height rectangles.
+				paint.ColorOp{Color: th.Base300}.Add(gtx.Ops)
+				paint.PaintOp{}.Add(gtx.Ops)
+				bw := gtx.Dp(1)
+				inner := image.Rect(bw, bw, sz.X-bw, sz.Y-bw)
+				if inner.Dx() > 0 && inner.Dy() > 0 {
+					innerRadius := radius - bw
+					if innerRadius < 0 {
+						innerRadius = 0
+					}
+					innerStack := clip.UniformRRect(inner, innerRadius).Push(gtx.Ops)
+					paint.ColorOp{Color: th.Base100}.Add(gtx.Ops)
+					paint.PaintOp{}.Add(gtx.Ops)
+					innerStack.Pop()
+				}
+			} else {
+				paint.ColorOp{Color: th.Base100}.Add(gtx.Ops)
+				paint.PaintOp{}.Add(gtx.Ops)
 			}
 
 			return layout.Dimensions{Size: sz}
@@ -488,7 +495,7 @@ func (inp *Input) Layout(gtx layout.Context) layout.Dimensions {
 					paint.PaintOp{}.Add(gtx.Ops)
 
 					// Border
-					if inp.Variant != InputGhost {
+					if inp.Variant != InputGhost && sz.X > 0 && sz.Y > 0 {
 						paint.FillShape(gtx.Ops, borderCol,
 							clip.Stroke{
 								Path:  clip.UniformRRect(image.Rectangle{Max: sz}, radius).Path(gtx.Ops),
@@ -499,6 +506,7 @@ func (inp *Input) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Dimensions{Size: sz}
 				}),
 				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X // fill full width so editor hit area covers the input
 					gtx.Constraints.Min.Y = h
 					return layout.Inset{
 						Left: th.Space3, Right: th.Space3,
@@ -924,11 +932,11 @@ func NewChip(th *theme.Theme, text string) *Chip {
 
 func (c *Chip) Layout(gtx layout.Context) layout.Dimensions {
 	th := c.th
-	radius := gtx.Dp(th.RoundedFull)
 
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			sz := gtx.Constraints.Min
+			radius := min(sz.X, sz.Y) / 2 // cap to avoid degenerate Bezier curves
 			defer clip.UniformRRect(image.Rectangle{Max: sz}, radius).Push(gtx.Ops).Pop()
 			paint.ColorOp{Color: th.Base200}.Add(gtx.Ops)
 			paint.PaintOp{}.Add(gtx.Ops)
