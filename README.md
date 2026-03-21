@@ -10,7 +10,7 @@
 
 ```
 gioui-kit/
-├── pkg/
+├── 
 │   ├── theme/        # 🎨 Color palette + semantic tokens + typography
 │   │   └── theme.go  #    Tailwind colors (Slate50..950, Blue500, etc.)
 │   │                  #    DaisyUI tokens (Primary, Secondary, Base100, etc.)
@@ -56,9 +56,9 @@ import (
     "gioui.org/op"
     "gioui.org/widget"
 
-    "github.com/hongshengjie/gioui-kit/pkg/component"
-    kit "github.com/hongshengjie/gioui-kit/pkg/layout"
-    "github.com/hongshengjie/gioui-kit/pkg/theme"
+    "github.com/hongshengjie/gioui-kit/component"
+    kit "github.com/hongshengjie/gioui-kit/layout"
+    "github.com/hongshengjie/gioui-kit/theme"
 )
 
 func main() {
@@ -460,6 +460,79 @@ toast.Layout(gtx)
 
 ```go
 scaffold.NewBreadcrumb(th, "Home", "Products", "Detail").Layout(gtx)
+```
+
+---
+
+---
+
+## Responsive / Breakpoints
+
+GioUI Kit includes a Tailwind-style breakpoint system based on the available
+widget width (`gtx.Constraints.Max.X`).
+
+### Breakpoint constants
+
+| Constant         | Min width | Tailwind prefix |
+|------------------|-----------|-----------------|
+| `BreakpointXs`   | —         | (default/mobile)|
+| `BreakpointSm`   | 640 dp    | `sm:`           |
+| `BreakpointMd`   | 768 dp    | `md:`           |
+| `BreakpointLg`   | 1024 dp   | `lg:`           |
+| `BreakpointXl`   | 1280 dp   | `xl:`           |
+| `Breakpoint2xl`  | 1536 dp   | `2xl:`          |
+
+```go
+bp := kit.ScreenBreakpoint(gtx)   // current breakpoint
+w  := kit.ScreenWidthDp(gtx)      // available width in dp (float32)
+
+// Conditional layout
+if bp < kit.BreakpointMd {
+    // mobile layout
+} else {
+    // desktop layout
+}
+```
+
+### Responsive Grid
+
+```go
+// 1 col on mobile → 2 on tablet → 3 on desktop (like Tailwind grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+kit.Grid{
+    Cols:   1,
+    MdCols: 2,
+    LgCols: 3,
+    Gap:    16,
+}.Layout(gtx, widgetA, widgetB, widgetC, widgetD)
+```
+
+### Responsive AppShell
+
+The sidebar is automatically hidden on narrow screens:
+
+```go
+shell := scaffold.NewAppShell(th).
+    WithNavbar(navbarWidget).
+    WithSidebar(sidebarWidget, 256).
+    WithContent(contentWidget)
+// Sidebar visible at ≥ 1024 dp by default.
+// Override:
+shell.HideSidebarBelow = kit.BreakpointMd   // hide below 768 dp
+shell.HideSidebarBelow = kit.BreakpointXs   // always show sidebar
+shell.Layout(gtx)
+```
+
+On mobile (sidebar hidden), pair with a `Drawer` to provide sidebar access:
+
+```go
+// Show a hamburger button in the Navbar that opens the Drawer
+drawer := scaffold.NewDrawer(th)
+drawer.Side = scaffold.DrawerLeft
+// ... in navbar end widget:
+if hamburgerBtn.Clicked(gtx) {
+    drawer.Toggle()
+}
+drawer.Layout(gtx, sidebarWidget)
 ```
 
 ---

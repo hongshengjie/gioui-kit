@@ -16,10 +16,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/pkg/component"
-	kit "github.com/hongshengjie/gioui-kit/pkg/layout"
-	"github.com/hongshengjie/gioui-kit/pkg/scaffold"
-	"github.com/hongshengjie/gioui-kit/pkg/theme"
+	"github.com/hongshengjie/gioui-kit/component"
+	kit "github.com/hongshengjie/gioui-kit/layout"
+	"github.com/hongshengjie/gioui-kit/scaffold"
+	"github.com/hongshengjie/gioui-kit/theme"
 )
 
 func main() {
@@ -86,6 +86,14 @@ type App struct {
 	btnDrawer      widget.Clickable
 	btnDrawerClose widget.Clickable
 
+	// --- Mobile nav (hamburger + drawer items) ---
+	btnHamburger      widget.Clickable
+	btnDrawerDash     widget.Clickable
+	btnDrawerComp     widget.Clickable
+	btnDrawerLayout   widget.Clickable
+	btnDrawerForms    widget.Clickable
+	btnDrawerSettings widget.Clickable
+
 	// --- Overview quick-start ---
 	btnOverview1 widget.Clickable
 	btnOverview2 widget.Clickable
@@ -144,16 +152,19 @@ func NewApp() *App {
 	a.editor4.SingleLine = true
 	a.toggle1.Value = true
 
-	a.sidebar.OnSelect = func(i int) {
-		a.pageIndex = i
-		for j := range a.sidebar.Items {
-			a.sidebar.Items[j].Active = j == i
-		}
-	}
+	a.sidebar.OnSelect = func(i int) { a.selectPage(i) }
 
 	a.shell = scaffold.NewAppShell(th)
 	a.scroll.List.Axis = layout.Vertical // zero-value is Horizontal; must set explicitly
 	return a
+}
+
+// selectPage switches the active page and syncs the sidebar.
+func (a *App) selectPage(i int) {
+	a.pageIndex = i
+	for j := range a.sidebar.Items {
+		a.sidebar.Items[j].Active = j == i
+	}
 }
 
 func run(w *app.Window) error {
@@ -166,6 +177,32 @@ func run(w *app.Window) error {
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
+
+			// Hamburger → open drawer
+			if a.btnHamburger.Clicked(gtx) {
+				a.drawer.Open()
+			}
+			// Drawer nav items
+			if a.btnDrawerDash.Clicked(gtx) {
+				a.selectPage(0)
+				a.drawer.Close()
+			}
+			if a.btnDrawerComp.Clicked(gtx) {
+				a.selectPage(1)
+				a.drawer.Close()
+			}
+			if a.btnDrawerLayout.Clicked(gtx) {
+				a.selectPage(2)
+				a.drawer.Close()
+			}
+			if a.btnDrawerForms.Clicked(gtx) {
+				a.selectPage(3)
+				a.drawer.Close()
+			}
+			if a.btnDrawerSettings.Clicked(gtx) {
+				a.selectPage(4)
+				a.drawer.Close()
+			}
 
 			// Modal
 			if a.btnModal.Clicked(gtx) {
@@ -209,14 +246,29 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 	th := a.th
 
 	a.shell.Navbar = func(gtx layout.Context) layout.Dimensions {
+		mobile := kit.ScreenBreakpoint(gtx) < kit.BreakpointLg
 		return a.navbar.Layout(gtx,
+			// start: hamburger on mobile, brand on desktop
 			func(gtx layout.Context) layout.Dimensions {
+				if mobile {
+					return component.NewButton(th, &a.btnHamburger, "≡").WithVariant(component.BtnGhost).Layout(gtx)
+				}
 				return component.NewText(th, "GioUI Kit").H3().Bold().WithColor(th.Primary).Layout(gtx)
 			},
-			nil,
+			// center: brand on mobile, empty on desktop
+			func(gtx layout.Context) layout.Dimensions {
+				if !mobile {
+					return layout.Dimensions{}
+				}
+				return component.NewText(th, "GioUI Kit").H3().Bold().WithColor(th.Primary).Layout(gtx)
+			},
+			// end: badge+avatar on desktop, avatar only on mobile
 			func(gtx layout.Context) layout.Dimensions {
 				return kit.FlexRow{Gap: 8, Alignment: kit.ItemsCenter}.Layout(gtx,
 					kit.Rigid(func(gtx layout.Context) layout.Dimensions {
+						if mobile {
+							return layout.Dimensions{}
+						}
 						return component.NewBadge(th, "v0.1.0").WithVariant(component.BadgePrimary).Layout(gtx)
 					}),
 					kit.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -259,19 +311,19 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 					return kit.DividerH{Color: th.Base300}.Layout(gtx)
 				}),
 				kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return component.NewText(th, "◉  Dashboard").Layout(gtx)
+					return component.NewButton(th, &a.btnDrawerDash, "◉  Dashboard").WithVariant(component.BtnGhost).Layout(gtx)
 				}),
 				kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return component.NewText(th, "◫  Components").Layout(gtx)
+					return component.NewButton(th, &a.btnDrawerComp, "◫  Components").WithVariant(component.BtnGhost).Layout(gtx)
 				}),
 				kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return component.NewText(th, "⊞  Layout").Layout(gtx)
+					return component.NewButton(th, &a.btnDrawerLayout, "⊞  Layout").WithVariant(component.BtnGhost).Layout(gtx)
 				}),
 				kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return component.NewText(th, "✎  Forms").Layout(gtx)
+					return component.NewButton(th, &a.btnDrawerForms, "✎  Forms").WithVariant(component.BtnGhost).Layout(gtx)
 				}),
 				kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return component.NewText(th, "⚙  Settings").Layout(gtx)
+					return component.NewButton(th, &a.btnDrawerSettings, "⚙  Settings").WithVariant(component.BtnGhost).Layout(gtx)
 				}),
 			)
 		})
@@ -310,9 +362,13 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 func (a *App) layoutContent(gtx layout.Context) layout.Dimensions {
 	return a.scroll.List.Layout(gtx, 1, func(gtx layout.Context, _ int) layout.Dimensions {
 		th := a.th
+		hPad := th.Space8
+		if kit.ScreenBreakpoint(gtx) < kit.BreakpointMd {
+			hPad = th.Space4
+		}
 		return layout.Inset{
 			Top: th.Space6, Bottom: th.Space8,
-			Left: th.Space8, Right: th.Space8,
+			Left: hPad, Right: hPad,
 		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			switch a.pageIndex {
 			case 1:
@@ -364,9 +420,9 @@ func (a *App) pageDashboard(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 
-		// Stat cards
+		// Stat cards — 1 col mobile → 2 sm → 4 md+
 		kit.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return kit.Grid{Cols: 4, Gap: 16}.Layout(gtx,
+			return kit.Grid{Cols: 1, SmCols: 2, MdCols: 4, Gap: 16}.Layout(gtx,
 				statCard(th, "12", "Components", theme.Blue500),
 				statCard(th, "4", "Themes", theme.Purple500),
 				statCard(th, "8", "Layout Types", theme.Emerald500),
@@ -767,7 +823,7 @@ func (a *App) pageLayout(gtx layout.Context) layout.Dimensions {
 		// Cards section
 		kit.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return sectionCard(th, "Cards", "Content containers", func(gtx layout.Context) layout.Dimensions {
-				return kit.Grid{Cols: 3, Gap: 16}.Layout(gtx,
+				return kit.Grid{Cols: 1, MdCols: 2, LgCols: 3, Gap: 16}.Layout(gtx,
 					func(gtx layout.Context) layout.Dimensions {
 						return component.NewCard(th).WithBorder().CardWithHeader(gtx, "Bordered Card",
 							func(gtx layout.Context) layout.Dimensions {
@@ -945,7 +1001,7 @@ func (a *App) pageForms(gtx layout.Context) layout.Dimensions {
 		// Inputs
 		kit.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return sectionCard(th, "Text Inputs", "All input variants", func(gtx layout.Context) layout.Dimensions {
-				return kit.Grid{Cols: 2, Gap: 20}.Layout(gtx,
+				return kit.Grid{Cols: 1, MdCols: 2, Gap: 20}.Layout(gtx,
 					func(gtx layout.Context) layout.Dimensions {
 						return kit.FlexCol{Gap: 16}.Layout(gtx,
 							kit.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -1106,7 +1162,7 @@ func (a *App) pageSettings(gtx layout.Context) layout.Dimensions {
 		// Color palette preview
 		kit.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return sectionCard(th, "Color Palette", "Current theme semantic colors", func(gtx layout.Context) layout.Dimensions {
-				return kit.Grid{Cols: 4, Gap: 12}.Layout(gtx,
+				return kit.Grid{Cols: 2, MdCols: 4, Gap: 12}.Layout(gtx,
 					colorSwatch(th, "Primary", th.Primary, th.PrimaryContent),
 					colorSwatch(th, "Secondary", th.Secondary, th.SecondaryContent),
 					colorSwatch(th, "Accent", th.Accent, th.AccentContent),
