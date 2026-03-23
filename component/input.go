@@ -157,7 +157,20 @@ func (inp *Input) Layout(gtx layout.Context) layout.Dimensions {
 						if th.Shaper == nil {
 							th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(defaultFonts()))
 						}
-						return inp.Editor.Layout(gtx, th.Shaper, font.Font{}, th.FontSize, op.CallOp{}, op.CallOp{})
+						// Explicitly record text/selection materials so they always use
+						// theme colors, independent of paint state left by the background layer.
+						textMat := op.Record(gtx.Ops)
+						paint.ColorOp{Color: th.BaseContent}.Add(gtx.Ops)
+						textCallOp := textMat.Stop()
+						selMat := op.Record(gtx.Ops)
+						paint.ColorOp{Color: theme.WithAlpha(th.Primary, 80)}.Add(gtx.Ops)
+						selCallOp := selMat.Stop()
+						// Draw placeholder when editor is empty.
+						if inp.Editor.Text() == "" && inp.Placeholder != "" {
+							drawText(gtx, th, inp.Placeholder,
+								theme.Opacity(th.BaseContent, 0.4), th.FontSize, font.Normal)
+						}
+						return inp.Editor.Layout(gtx, th.Shaper, font.Font{}, th.FontSize, textCallOp, selCallOp)
 					})
 				}),
 			)

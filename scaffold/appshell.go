@@ -40,14 +40,17 @@ import (
 // the content area fills the full width.  Pair with a Drawer for mobile
 // sidebar access.
 type AppShell struct {
-	Navbar             layout.Widget
-	Sidebar            layout.Widget
-	SidebarWidth       unit.Dp
-	Content            layout.Widget
+	Navbar           layout.Widget
+	Sidebar          layout.Widget
+	SidebarWidth     unit.Dp
+	Content          layout.Widget
 	// HideSidebarBelow hides the inline sidebar when the screen is narrower
 	// than this breakpoint.  Defaults to BreakpointLg (< 1024 dp).
-	HideSidebarBelow   kit.Breakpoint
-	th                 *theme.Theme
+	HideSidebarBelow kit.Breakpoint
+	// SidebarOpen, when non-nil, overrides the breakpoint-based visibility.
+	// Set to a pointer to a bool field in your Application struct.
+	SidebarOpen *bool
+	th          *theme.Theme
 }
 
 func NewAppShell(th *theme.Theme) *AppShell {
@@ -78,6 +81,9 @@ func (a *AppShell) WithContent(w layout.Widget) *AppShell {
 func (a *AppShell) Layout(gtx layout.Context) layout.Dimensions {
 	th := a.th
 	showSidebar := a.Sidebar != nil && kit.ScreenBreakpoint(gtx) >= a.HideSidebarBelow
+	if a.SidebarOpen != nil {
+		showSidebar = a.Sidebar != nil && *a.SidebarOpen
+	}
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		// Navbar

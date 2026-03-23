@@ -98,8 +98,8 @@ func Light() *Theme {
 		ErrorContent:   White,
 
 		Base100:     White,
-		Base200:     Gray50,
-		Base300:     Gray100,
+		Base200:     Gray100,
+		Base300:     Gray300,
 		BaseContent: Gray900,
 
 		FontSize: 16,
