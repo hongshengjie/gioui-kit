@@ -9,6 +9,7 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
+	"gioui.org/widget"
 
 	"github.com/hongshengjie/gioui-kit/theme"
 )
@@ -25,7 +26,9 @@ type Drawer struct {
 	Visible bool
 	Side    DrawerSide
 	Width   unit.Dp
+	OnClose func() // called when the backdrop is tapped
 	th      *theme.Theme
+	back    widget.Clickable
 }
 
 func NewDrawer(th *theme.Theme) *Drawer {
@@ -48,13 +51,18 @@ func (d *Drawer) Layout(gtx layout.Context, content layout.Widget) layout.Dimens
 	w := gtx.Dp(d.Width)
 
 	return layout.Stack{}.Layout(gtx,
-		// Backdrop
+		// Backdrop (tappable to close)
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			sz := gtx.Constraints.Max
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 100},
-				clip.Rect{Max: sz}.Op(),
-			)
-			return layout.Dimensions{Size: sz}
+			if d.back.Clicked(gtx) && d.OnClose != nil {
+				d.OnClose()
+			}
+			return d.back.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				sz := gtx.Constraints.Max
+				paint.FillShape(gtx.Ops, color.NRGBA{A: 100},
+					clip.Rect{Max: sz}.Op(),
+				)
+				return layout.Dimensions{Size: sz}
+			})
 		}),
 		// Drawer panel
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {

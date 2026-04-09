@@ -1,0 +1,6 @@
+- [x] Explore project structure
+- [ ] Examine current example/main.go to understand existing implementation
+- [ ] Identify all components in component/, layout/, modifier/, scaffold/
+- [ ] Update example/main.go to include all components with demonstrations
+- [ ] Ensure the example compiles and runs properly
+- [ ] Test the example to verify all components are displayed
