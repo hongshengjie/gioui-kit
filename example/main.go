@@ -194,6 +194,12 @@ type App struct {
 	// --- Menu ---
 	menuItems []*component.MenuItem
 
+	// --- FAB clickables ---
+	fabMain    widget.Clickable
+	fabAction1 widget.Clickable
+	fabAction2 widget.Clickable
+	fabAction3 widget.Clickable
+
 	// --- Tooltip ---
 	tooltip *component.Tooltip
 
@@ -203,6 +209,14 @@ type App struct {
 
 	// --- Progress ---
 	progress float32
+
+	// --- FAB ---
+	fab      *component.Fab
+	fabGroup *component.FabGroup
+
+	// --- Advanced Table ---
+	dataTable     *component.Table
+	lastClickedRow int
 }
 
 func NewApp() *App {
@@ -254,6 +268,58 @@ func NewApp() *App {
 	a.toggle1.Value = true
 
 	a.sidebar.OnSelect = func(i int) { a.selectPage(i) }
+
+	// Advanced Table setup
+	tableCols := []component.TableCol{
+		{Title: "Name", Flex: 1.5, Sortable: true},
+		{Title: "Role", Flex: 1, Sortable: true},
+		{Title: "Status", Flex: 1, Sortable: true},
+		{Title: "Joined", Flex: 1, Sortable: true},
+		{Title: "Score", Flex: 0.8, Sortable: true},
+	}
+	tableRows := [][]string{
+		{"Alice Chen", "Admin", "Active", "2023-01", "98"},
+		{"Bob Smith", "Developer", "Active", "2023-03", "85"},
+		{"Carol Wu", "Designer", "Away", "2023-06", "91"},
+		{"Dan Park", "DevOps", "Active", "2024-01", "76"},
+		{"Eve Johnson", "QA", "Offline", "2024-02", "88"},
+		{"Frank Lee", "Manager", "Active", "2022-11", "94"},
+		{"Grace Kim", "Developer", "Active", "2023-08", "82"},
+		{"Hank Torres", "Support", "Away", "2024-03", "71"},
+	}
+	a.dataTable = component.NewDataTable(th, tableCols, tableRows).
+		WithZebra().
+		WithBorder().
+		WithSelectable().
+		WithMaxHeight(300).
+		WithOnRowClick(func(row int) { a.lastClickedRow = row + 1 }).
+		WithActions(
+			component.NewTableAction("Delete", func(rows []int) {
+				// remove selected rows (reverse order to preserve indices)
+				for i := len(rows) - 1; i >= 0; i-- {
+					idx := rows[i]
+					if idx < len(tableRows) {
+						tableRows = append(tableRows[:idx], tableRows[idx+1:]...)
+					}
+				}
+				a.dataTable.Rows = tableRows
+				a.dataTable.ClearSelection()
+			}).WithVariant(component.BtnError),
+			component.NewTableAction("Export", func(rows []int) {
+				a.dataTable.ClearSelection()
+			}).WithVariant(component.BtnOutline),
+		)
+
+	// FAB setup
+	a.fab = component.NewFab(th, &a.fabMain, iconCheck).
+		WithVariant(component.BtnPrimary).
+		WithLabel("Action")
+	a.fabGroup = component.NewFabGroup(th,
+		component.NewFab(th, &a.fabMain, iconSettings).WithVariant(component.BtnPrimary),
+		component.NewFab(th, &a.fabAction1, iconDashboard).WithVariant(component.BtnSecondary).WithSize(component.BtnMd).WithTooltip("Dashboard"),
+		component.NewFab(th, &a.fabAction2, iconComponents).WithVariant(component.BtnAccent).WithSize(component.BtnMd).WithTooltip("Components"),
+		component.NewFab(th, &a.fabAction3, iconForms).WithVariant(component.BtnSuccess).WithSize(component.BtnMd).WithTooltip("Forms"),
+	)
 
 	a.shell = scaffold.NewAppShell(th)
 	a.scroll.List.Axis = layout.Vertical // zero-value is Horizontal; must set explicitly
@@ -455,6 +521,11 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 
 	// Overlay: Toast
 	a.toast.Layout(gtx)
+
+	// Overlay: FAB group (shown on Components > Layout tab)
+	if a.pageIndex == 1 && a.compTabs.Selected() == 6 {
+		a.fabGroup.Layout(gtx)
+	}
 
 	return dims
 }

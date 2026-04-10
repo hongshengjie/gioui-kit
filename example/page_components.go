@@ -645,18 +645,27 @@ func (a *App) sectionDataDisplay(gtx layout.Context) layout.Dimensions {
 			})(gtx)
 		}),
 
-		// Table
+		// Advanced Table
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return sectionCard(th, "Table", "Data table with headers and rows", func(gtx layout.Context) layout.Dimensions {
-				headers := []string{"Name", "Role", "Status", "Joined"}
-				rows := [][]string{
-					{"Alice Chen", "Admin", "Active", "2023-01"},
-					{"Bob Smith", "Developer", "Active", "2023-03"},
-					{"Carol Wu", "Designer", "Away", "2023-06"},
-					{"Dan Park", "DevOps", "Active", "2024-01"},
-					{"Eve Johnson", "QA", "Offline", "2024-02"},
-				}
-				return component.NewTable(th, headers, rows).WithZebra().WithBorder().Layout(gtx)
+			return sectionCard(th, "Table", "Sortable, selectable data table with virtual scroll", func(gtx layout.Context) layout.Dimensions {
+				return kit.FlexCol{Gap: 8}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return kit.FlexRow{Gap: 8, Alignment: kit.ItemsCenter}.Layout(gtx,
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								return component.NewText(th, "Click column headers to sort  •  Check rows to select  •  Scrolls after 300 dp").Sm().WithColor(theme.Gray400).Layout(gtx)
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						if a.lastClickedRow > 0 {
+							return component.NewText(th, fmt.Sprintf("Last clicked: row %d", a.lastClickedRow)).Sm().WithColor(th.Primary).Layout(gtx)
+						}
+						return layout.Dimensions{}
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return a.dataTable.Layout(gtx)
+					}),
+				)
 			})(gtx)
 		}),
 	)
@@ -735,6 +744,45 @@ func (a *App) sectionLayout(gtx layout.Context) layout.Dimensions {
 				{Label: "Profile", IconData: iconPerson},
 			}
 			return scaffold.NewBottomNav(th, items).Layout(gtx)
+		})),
+
+		// FAB
+		layout.Rigid(sectionCard(th, "FAB", "Floating action button (see bottom-right corner)", func(gtx layout.Context) layout.Dimensions {
+			return kit.FlexCol{Gap: 12}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return component.NewText(th, "A FAB is a corner overlay. The expanded group (bottom-right) is live — click the settings icon to reveal secondary actions.").Sm().WithColor(theme.Gray500).Layout(gtx)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return kit.FlexRow{Gap: 8, Alignment: kit.ItemsCenter}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewBadge(th, "Simple").WithVariant(component.BadgePrimary).Layout(gtx)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewText(th, "NewFab(th, click, icon).Layout(gtx)").Sm().WithColor(theme.Gray400).Layout(gtx)
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return kit.FlexRow{Gap: 8, Alignment: kit.ItemsCenter}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewBadge(th, "Extended").WithVariant(component.BadgeSecondary).Layout(gtx)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewText(th, "NewFab(...).WithLabel(\"Action\").Layout(gtx)").Sm().WithColor(theme.Gray400).Layout(gtx)
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return kit.FlexRow{Gap: 8, Alignment: kit.ItemsCenter}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewBadge(th, "Group").WithVariant(component.BadgeAccent).Layout(gtx)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return component.NewText(th, "NewFabGroup(th, main, actions...).Layout(gtx)").Sm().WithColor(theme.Gray400).Layout(gtx)
+						}),
+					)
+				}),
+			)
 		})),
 	)
 }
