@@ -4,7 +4,7 @@ import (
 	"gioui.org/font"
 	"gioui.org/layout"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 type Breadcrumb struct {

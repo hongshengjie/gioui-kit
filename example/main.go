@@ -14,10 +14,10 @@ import (
 	"gioui.org/widget"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
-	"github.com/hongshengjie/gioui-kit/component"
-	kit "github.com/hongshengjie/gioui-kit/layout"
-	"github.com/hongshengjie/gioui-kit/scaffold"
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/component"
+	kit "github.com/ossprovider/gioui-kit/layout"
+	"github.com/ossprovider/gioui-kit/scaffold"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // mustIcon panics if an iconvg icon fails to parse (should never happen with bundled data).

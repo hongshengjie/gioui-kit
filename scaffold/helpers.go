@@ -12,7 +12,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 func drawLabel(gtx layout.Context, th *theme.Theme, txt string, col color.NRGBA, size unit.Sp, weight font.Weight) layout.Dimensions {

@@ -13,7 +13,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // Checkbox is a DaisyUI-style checkbox component.

@@ -13,7 +13,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // Text renders themed text (like Tailwind text-sm, text-lg, font-bold, etc.).

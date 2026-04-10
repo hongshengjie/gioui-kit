@@ -56,9 +56,9 @@ import (
     "gioui.org/op"
     "gioui.org/widget"
 
-    "github.com/hongshengjie/gioui-kit/component"
-    kit "github.com/hongshengjie/gioui-kit/layout"
-    "github.com/hongshengjie/gioui-kit/theme"
+    "github.com/ossprovider/gioui-kit/component"
+    kit "github.com/ossprovider/gioui-kit/layout"
+    "github.com/ossprovider/gioui-kit/theme"
 )
 
 func main() {

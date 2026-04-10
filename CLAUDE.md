@@ -45,4 +45,4 @@ theme → layout → modifier → component → scaffold
 
 ### Module
 
-`github.com/hongshengjie/gioui-kit`, requires `gioui.org v0.9.0`.
+`github.com/ossprovider/gioui-kit`, requires `gioui.org v0.9.0`.

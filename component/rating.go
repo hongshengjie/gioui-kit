@@ -9,7 +9,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // Rating is a DaisyUI-style star rating component.

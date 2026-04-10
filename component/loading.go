@@ -13,7 +13,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // LoadingVariant defines the visual style of the loading indicator.

@@ -11,8 +11,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	kitlayout "github.com/hongshengjie/gioui-kit/layout"
-	"github.com/hongshengjie/gioui-kit/theme"
+	kitlayout "github.com/ossprovider/gioui-kit/layout"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // IconTextButton is a DaisyUI-style button with a leading icon and a text label.

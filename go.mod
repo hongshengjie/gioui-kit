@@ -1,4 +1,4 @@
-module github.com/hongshengjie/gioui-kit
+module github.com/ossprovider/gioui-kit
 
 go 1.23.8
 

@@ -18,8 +18,8 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 
-	kit "github.com/hongshengjie/gioui-kit/layout"
-	"github.com/hongshengjie/gioui-kit/theme"
+	kit "github.com/ossprovider/gioui-kit/layout"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // AppShell provides a complete application layout with optional

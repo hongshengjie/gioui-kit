@@ -7,10 +7,10 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/component"
-	kit "github.com/hongshengjie/gioui-kit/layout"
-	"github.com/hongshengjie/gioui-kit/scaffold"
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/component"
+	kit "github.com/ossprovider/gioui-kit/layout"
+	"github.com/ossprovider/gioui-kit/scaffold"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 func pageHeader(th *theme.Theme, gtx layout.Context, title, breadcrumb, subtitle string) layout.Dimensions {

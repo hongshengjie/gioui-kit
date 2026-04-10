@@ -5,11 +5,11 @@ import (
 
 	"gioui.org/layout"
 
-	"github.com/hongshengjie/gioui-kit/component"
-	kit "github.com/hongshengjie/gioui-kit/layout"
-	"github.com/hongshengjie/gioui-kit/modifier"
-	"github.com/hongshengjie/gioui-kit/scaffold"
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/component"
+	kit "github.com/ossprovider/gioui-kit/layout"
+	"github.com/ossprovider/gioui-kit/modifier"
+	"github.com/ossprovider/gioui-kit/scaffold"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // ─── Page: Components ───────────────────────────────────────────────────────
@@ -476,7 +476,7 @@ func (a *App) sectionControls(gtx layout.Context) layout.Dimensions {
 						return component.NewText(th, "GioUI Kit is a TailwindCSS and DaisyUI inspired component library for the Gio immediate-mode UI framework.").Sm().WithColor(theme.Gray500).Layout(gtx)
 					},
 					func(gtx layout.Context) layout.Dimensions {
-						return component.NewText(th, "Add github.com/hongshengjie/gioui-kit to your go.mod and import the packages you need.").Sm().WithColor(theme.Gray500).Layout(gtx)
+						return component.NewText(th, "Add github.com/ossprovider/gioui-kit to your go.mod and import the packages you need.").Sm().WithColor(theme.Gray500).Layout(gtx)
 					},
 					func(gtx layout.Context) layout.Dimensions {
 						return component.NewText(th, "Yes! Pass any *theme.Theme to component constructors. Use theme.Light(), theme.Dark(), theme.Cupcake(), or theme.Nord().").Sm().WithColor(theme.Gray500).Layout(gtx)

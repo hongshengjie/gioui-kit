@@ -9,7 +9,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/hongshengjie/gioui-kit/theme"
+	"github.com/ossprovider/gioui-kit/theme"
 )
 
 // Range is a DaisyUI-style range/slider component backed by widget.Float.
